@@ -14,11 +14,13 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth auth;
+    private TextInputLayout tilCorreo, tilClave;
     private EditText etCorreo, etClave;
     private Button btnIngresar;
 
@@ -42,6 +44,8 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
+        tilCorreo = findViewById(R.id.tilCorreo);
+        tilClave = findViewById(R.id.tilClave);
         etCorreo = findViewById(R.id.etCorreo);
         etClave = findViewById(R.id.etClave);
         btnIngresar = findViewById(R.id.btnIngresar);
@@ -56,19 +60,23 @@ public class LoginActivity extends AppCompatActivity {
         String correo = etCorreo.getText().toString().trim();
         String clave = etClave.getText().toString();
 
+        // Limpia los errores anteriores
+        tilCorreo.setError(null);
+        tilClave.setError(null);
+
         // Validaciones de campos obligatorios
         if (correo.isEmpty()) {
-            etCorreo.setError("Ingresa tu correo");
+            tilCorreo.setError("Ingresa tu correo");
             etCorreo.requestFocus();
             return;
         }
         if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
-            etCorreo.setError("Correo no válido");
+            tilCorreo.setError("Correo no válido");
             etCorreo.requestFocus();
             return;
         }
         if (clave.isEmpty()) {
-            etClave.setError("Ingresa tu contraseña");
+            tilClave.setError("Ingresa tu contraseña");
             etClave.requestFocus();
             return;
         }

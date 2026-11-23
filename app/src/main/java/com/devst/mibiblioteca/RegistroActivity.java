@@ -14,6 +14,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
@@ -21,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 public class RegistroActivity extends AppCompatActivity {
 
     private FirebaseAuth auth;
+    private TextInputLayout tilCorreo, tilClave, tilConfirmar;
     private EditText etCorreo, etClave, etConfirmar;
     private Button btnRegistrar;
 
@@ -37,6 +39,9 @@ public class RegistroActivity extends AppCompatActivity {
 
         auth = FirebaseAuth.getInstance();
 
+        tilCorreo = findViewById(R.id.tilCorreo);
+        tilClave = findViewById(R.id.tilClave);
+        tilConfirmar = findViewById(R.id.tilConfirmar);
         etCorreo = findViewById(R.id.etCorreo);
         etClave = findViewById(R.id.etClave);
         etConfirmar = findViewById(R.id.etConfirmar);
@@ -52,24 +57,29 @@ public class RegistroActivity extends AppCompatActivity {
         String clave = etClave.getText().toString();
         String confirmar = etConfirmar.getText().toString();
 
+        // Limpia los errores anteriores
+        tilCorreo.setError(null);
+        tilClave.setError(null);
+        tilConfirmar.setError(null);
+
         // Validaciones
         if (correo.isEmpty()) {
-            etCorreo.setError("Ingresa un correo");
+            tilCorreo.setError("Ingresa un correo");
             etCorreo.requestFocus();
             return;
         }
         if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
-            etCorreo.setError("Correo no válido");
+            tilCorreo.setError("Correo no válido");
             etCorreo.requestFocus();
             return;
         }
         if (clave.length() < 6) {
-            etClave.setError("Mínimo 6 caracteres");
+            tilClave.setError("Mínimo 6 caracteres");
             etClave.requestFocus();
             return;
         }
         if (!clave.equals(confirmar)) {
-            etConfirmar.setError("Las contraseñas no coinciden");
+            tilConfirmar.setError("Las contraseñas no coinciden");
             etConfirmar.requestFocus();
             return;
         }
@@ -88,10 +98,10 @@ public class RegistroActivity extends AppCompatActivity {
                         startActivity(intent);
                         finish();
                     } else if (tarea.getException() instanceof FirebaseAuthUserCollisionException) {
-                        etCorreo.setError("Ese correo ya está registrado");
+                        tilCorreo.setError("Ese correo ya está registrado");
                         etCorreo.requestFocus();
                     } else if (tarea.getException() instanceof FirebaseAuthWeakPasswordException) {
-                        etClave.setError("Contraseña muy débil");
+                        tilClave.setError("Contraseña muy débil");
                         etClave.requestFocus();
                     } else {
                         Toast.makeText(this, "No se pudo registrar. Revisa tu conexión", Toast.LENGTH_LONG).show();

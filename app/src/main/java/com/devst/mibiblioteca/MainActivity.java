@@ -2,7 +2,7 @@ package com.devst.mibiblioteca;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -13,6 +13,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText etTitulo, etAutor, etGenero, etAnio;
     private TextView tvContador;
-    private ArrayAdapter<Libro> adaptador;
+    private LibroAdapter adaptador;
     private final List<Libro> listaLibros = new ArrayList<>();
 
     // Libro que el usuario tocó en la lista (null si no hay ninguno seleccionado)
@@ -41,9 +42,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        // Íconos de la barra de estado en blanco, para que se vean sobre la barra morada
+        WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView())
+                .setAppearanceLightStatusBars(false);
+
+        // La barra morada llega hasta arriba y el contenido respeta la barra de navegación
+        View contenido = findViewById(R.id.contenido);
+        int margen = contenido.getPaddingLeft();
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            contenido.setPadding(margen, margen, margen, margen + systemBars.bottom);
             return insets;
         });
 
@@ -60,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         repositorio = new LibroRepositorio(usuario.getUid());
 
         TextView tvUsuario = findViewById(R.id.tvUsuario);
-        tvUsuario.setText("Hola, " + usuario.getEmail());
+        tvUsuario.setText(usuario.getEmail());
 
         etTitulo = findViewById(R.id.etTitulo);
         etAutor = findViewById(R.id.etAutor);
@@ -69,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         tvContador = findViewById(R.id.tvContador);
         ListView lvLibros = findViewById(R.id.lvLibros);
 
-        adaptador = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, listaLibros);
+        adaptador = new LibroAdapter(this, listaLibros);
         lvLibros.setAdapter(adaptador);
         lvLibros.setOnItemClickListener((parent, vista, posicion, id) ->
                 seleccionarLibro(listaLibros.get(posicion)));
@@ -102,7 +112,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             adaptador.notifyDataSetChanged();
-            tvContador.setText("Mis libros (" + listaLibros.size() + ")");
+            int total = listaLibros.size();
+            tvContador.setText(total == 1 ? "1 libro" : total + " libros");
         });
     }
 
@@ -231,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
         etAutor.setError(null);
         etGenero.setError(null);
         etAnio.setError(null);
-        etTitulo.requestFocus();
+        etTitulo.clearFocus();
     }
 
     private void cerrarSesion() {
