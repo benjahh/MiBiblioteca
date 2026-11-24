@@ -15,6 +15,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginActivity extends AppCompatActivity {
@@ -89,6 +90,9 @@ public class LoginActivity extends AppCompatActivity {
                     if (tarea.isSuccessful()) {
                         Toast.makeText(this, "Bienvenido", Toast.LENGTH_SHORT).show();
                         irAMisLibros();
+                    } else if (tarea.getException() instanceof FirebaseNetworkException) {
+                        // Para iniciar sesión Firebase necesita internet
+                        Toast.makeText(this, "Sin conexión a internet. Conéctate para iniciar sesión", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(this, "Correo o contraseña incorrectos", Toast.LENGTH_LONG).show();
                     }

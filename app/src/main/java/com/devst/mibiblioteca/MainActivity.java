@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.MetadataChanges;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -94,9 +95,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // ---------------- READ ----------------
-    // Escucha la colección en tiempo real: la lista se actualiza sola con cada cambio
+    // Escucha la colección en tiempo real: la lista se actualiza sola con cada cambio.
+    // MetadataChanges.INCLUDE hace que también avise cuando cambia la conexión.
     private void escucharLibros() {
-        repositorio.obtenerTodos().addSnapshotListener(this, (resultado, error) -> {
+        repositorio.obtenerTodos().addSnapshotListener(this, MetadataChanges.INCLUDE, (resultado, error) -> {
             if (error != null) {
                 mensaje("Error al cargar los libros: " + error.getMessage());
                 return;
@@ -113,7 +115,12 @@ public class MainActivity extends AppCompatActivity {
             }
             adaptador.notifyDataSetChanged();
             int total = listaLibros.size();
-            tvContador.setText(total == 1 ? "1 libro" : total + " libros");
+            String texto = total == 1 ? "1 libro" : total + " libros";
+            // isFromCache() = los datos vienen de la copia guardada en el teléfono (sin internet)
+            if (resultado.getMetadata().isFromCache()) {
+                texto += " (sin conexión)";
+            }
+            tvContador.setText(texto);
         });
     }
 
@@ -126,12 +133,12 @@ public class MainActivity extends AppCompatActivity {
         Libro libro = leerFormulario();
         if (libro == null) return;
 
+        // Firestore guarda primero en el teléfono y después lo sube a la nube,
+        // así que funciona aunque no haya internet (se sincroniza al volver la conexión)
         repositorio.agregar(libro)
-                .addOnSuccessListener(referencia -> {
-                    mensaje("Libro guardado");
-                    limpiarFormulario();
-                })
                 .addOnFailureListener(e -> mensaje("Error al guardar: " + e.getMessage()));
+        mensaje("Libro guardado");
+        limpiarFormulario();
     }
 
     // ---------------- UPDATE ----------------
@@ -145,11 +152,9 @@ public class MainActivity extends AppCompatActivity {
         libro.setId(libroSeleccionado.getId());
 
         repositorio.actualizar(libro)
-                .addOnSuccessListener(sinUso -> {
-                    mensaje("Libro actualizado");
-                    limpiarFormulario();
-                })
                 .addOnFailureListener(e -> mensaje("Error al actualizar: " + e.getMessage()));
+        mensaje("Libro actualizado");
+        limpiarFormulario();
     }
 
     // ---------------- DELETE ----------------
@@ -168,11 +173,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void eliminarLibro() {
         repositorio.eliminar(libroSeleccionado.getId())
-                .addOnSuccessListener(sinUso -> {
-                    mensaje("Libro eliminado");
-                    limpiarFormulario();
-                })
                 .addOnFailureListener(e -> mensaje("Error al eliminar: " + e.getMessage()));
+        mensaje("Libro eliminado");
+        limpiarFormulario();
     }
 
     // ---------------- Validaciones ----------------
